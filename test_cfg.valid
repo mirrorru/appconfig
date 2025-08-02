@@ -1,0 +1,8 @@
+name: Somebody
+slice: [1,2]
+map:
+    one: two
+value: 101
+flag: true
+include:
+    subvalue: 100.1
