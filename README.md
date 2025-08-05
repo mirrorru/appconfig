@@ -17,7 +17,7 @@ General usage example:
     }
 
     type appConfig struct {
-        // Include appconfig.ConfigBase, if you need to process --help, --example or --config=file_name
+        // Include appconfig.ConfigBase or specify "magic" tags, if you need to process --help, --example or --config=file_name
         Title string `default:"My App" env:"name" flag:"name" help:"Name of application"`
         HTTP  httpServiceCfg
     }
