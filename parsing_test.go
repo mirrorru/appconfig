@@ -210,7 +210,6 @@ func TestParseFlags(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			os.Args = tt.args
 			result := parseFlags(tt.args)
 			assert.Equal(t, tt.expected, result)
 		})
