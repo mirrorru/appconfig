@@ -157,8 +157,8 @@ func (ci *ConfigInfo) HasExampleFlag() bool {
 func (ci *ConfigInfo) ShowHelp() {
 	// Showing parameters help
 	const lineFormat = "%-30s %-30s %-15s %s\n"
-	fmt.Println("List or program paremeters")
-	_, _ = fmt.Printf(lineFormat, "Enveroiment param", "command-line flag", "default value", "description")
+	fmt.Println("List or program parameters")
+	_, _ = fmt.Printf(lineFormat, "Environment param", "command-line flag", "default value", "description")
 	for _, param := range ci.params {
 		fmt.Printf(lineFormat, param.EnvName, param.FlagName, param.Default, param.HelpText)
 	}
@@ -170,7 +170,7 @@ func (ci *ConfigInfo) ShowExample(config any) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal config file for printing: %v", err)
 	}
-	fmt.Printf("\n\nConfig file example:\n## >>>>> config file starts here >>>>>\n%s\n## >>>>> config file ends here <<<<<<\n\n", string(data))
+	fmt.Printf("Config file example:\n## >>>>> config file starts here >>>>>\n%s## >>>>> config file ends here <<<<<<\n", string(data))
 
 	return nil
 }
