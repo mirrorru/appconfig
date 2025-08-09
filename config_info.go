@@ -20,6 +20,9 @@ type ConfigInfo struct {
 	configNameParamValue   string
 }
 
+// NewConfigInfo creates new item on ConfigInfo and fills it with information of config parameters from `config`
+//   - config - any structure or a pointer to it where the configuration is planned to be loaded
+//   - envPrefix - a common prefix for environment variables from which configuration values can be taken
 func NewConfigInfo(config any, envPrefix string) (result *ConfigInfo, err error) {
 	rv := reflect.ValueOf(config)
 	if rv.Kind() == reflect.Ptr {
@@ -87,6 +90,8 @@ fieldsLoop:
 	}
 }
 
+// Load - loads field values from defaults, then from environment, when from flags, when from config, if specified
+//   - config - a pointer to structure where the configuration is planned to be loaded
 func (ci *ConfigInfo) Load(config any) error {
 	rv := reflect.ValueOf(config)
 	if rv.Kind() != reflect.Ptr {
@@ -146,14 +151,17 @@ func (ci *ConfigInfo) Load(config any) error {
 	return nil
 }
 
+// HasHelpFlag checks that the "help" flag is set
 func (ci *ConfigInfo) HasHelpFlag() bool {
 	return ci.helpFlagParamValue
 }
 
+// HasExampleFlag checks that the "example" flag is set
 func (ci *ConfigInfo) HasExampleFlag() bool {
 	return ci.exampleFlagParamValue
 }
 
+// ShowHelp showing help
 func (ci *ConfigInfo) ShowHelp() {
 	// Showing parameters help
 	const lineFormat = "%-30s %-30s %-15s %s\n"
@@ -164,6 +172,7 @@ func (ci *ConfigInfo) ShowHelp() {
 	}
 }
 
+// ShowExample showing config example based on `config` data
 func (ci *ConfigInfo) ShowExample(config any) error {
 	// printing config file example
 	data, err := yaml.Marshal(config)
