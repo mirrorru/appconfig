@@ -74,8 +74,7 @@ func main() {
     ## >>>>> config file ends here <<<<<<
 
 #####  Load config from flags and environment
-    $ export APP_NAME="Best APP"
-    go run main.go --http-address=:8888 --http-tls
+    $ APP_NAME="Best APP" go run main.go --http-address=:8888 --http-tls
     main.appCfg{Title:"Best APP", HTTP:main.httpCfg{Address:":8888", UseTLS:true}, ConfigBase:appconfig.ConfigBase{ShowHelp:false, PrintExample:false, ConfigFile:""}}
 
 
