@@ -34,3 +34,10 @@ func Load[T any, PT interface{ *T }](receiver PT, envPrefix string) (errResult e
 
 	return errResult
 }
+
+// MustLoad - try to Load configuration, and panics if error!=nil
+func MustLoad[T any, PT interface{ *T }](receiver PT, envPrefix string) {
+	if err := Load(receiver, envPrefix); err != nil {
+		panic(err)
+	}
+}
