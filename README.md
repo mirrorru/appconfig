@@ -26,9 +26,9 @@ type httpCfg struct {
 }
 
 type appCfg struct {
-	appconfig.ConfigBase        // Including fields with "magic" tags, if you need to process --help, --example or --config=file_name
 	Title                string `default:"My App" env:"name" flag:"name" help:"Name of application"`
 	HTTP                 httpCfg
+	appconfig.ConfigBase `yaml:"-"` // Including fields with "magic" tags, if you need to process --help, --example or --config=file_name
 }
 
 func main() {
@@ -66,11 +66,10 @@ func main() {
     $ go run main.go --example
     Config file example:
     ## >>>>> config file starts here >>>>>
-    title: Best APP
+    title: My App
     http:
-    address: :8080
-    usetls: false
-    configbase: {}
+        address: :8080
+        usetls: false
     ## >>>>> config file ends here <<<<<<
 
 #####  Load config from flags and environment
