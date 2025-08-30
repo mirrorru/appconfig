@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -90,9 +91,17 @@ fieldsLoop:
 	}
 }
 
-// Load - loads field values from defaults, then from environment, when from flags, when from config, if specified
+type loadSource byte
+
+const (
+	LoadSourceDefaults loadSource = iota
+	LoadSourceFlags
+	LoadSourceEnvs
+)
+
+// LoadInOrder - loads field values from specified source order, can be used for init default config.
 //   - config - a pointer to structure where the configuration is planned to be loaded
-func (ci *ConfigInfo) Load(config any) error {
+func (ci *ConfigInfo) LoadInOrder(config any, order ...loadSource) error {
 	rv := reflect.ValueOf(config)
 	if rv.Kind() != reflect.Ptr {
 		return errors.New("value is not a pointer to struct")
@@ -102,29 +111,40 @@ func (ci *ConfigInfo) Load(config any) error {
 		return errors.New("value is not a pointer to struct")
 	}
 
-	flags := parseFlags(os.Args[1:])
+	var flags map[string]string
+	if slices.Contains(order, LoadSourceFlags) {
+		flags = parseFlags(os.Args[1:])
+	}
 
 	for idx, param := range ci.params {
 		field := rv.FieldByIndex(param.index)
-		if param.Default != "" {
-			if err := parseFieldValue(field, param.Default); err != nil {
-				return fmt.Errorf("can't parse default value `%s` for %s: %w", param.Default, param.Path, err)
-			}
-		}
-		if param.EnvName != "" {
-			if envValue, exists := os.LookupEnv(param.EnvName); exists && envValue != "" {
-				if err := parseFieldValue(field, envValue); err != nil {
-					return fmt.Errorf("can't parse env value `%s` for %s: %w", envValue, param.Path, err)
+		for _, source := range order {
+			switch source {
+			case LoadSourceDefaults:
+				if param.Default != "" {
+					if err := parseFieldValue(field, param.Default); err != nil {
+						return fmt.Errorf("can't parse default value `%s` for %s: %w", param.Default, param.Path, err)
+					}
+				}
+			case LoadSourceEnvs:
+				if param.EnvName != "" {
+					if envValue, exists := os.LookupEnv(param.EnvName); exists && envValue != "" {
+						if err := parseFieldValue(field, envValue); err != nil {
+							return fmt.Errorf("can't parse env value `%s` for %s: %w", envValue, param.Path, err)
+						}
+					}
+				}
+			case LoadSourceFlags:
+				if param.FlagName != "" {
+					if flagValue, exists := flags[param.FlagName]; exists {
+						if err := parseFieldValue(field, flagValue); err != nil {
+							return fmt.Errorf("can't parse flag value `%s` for %s: %w", flagValue, param.Path, err)
+						}
+					}
 				}
 			}
 		}
-		if param.FlagName != "" {
-			if flagValue, exists := flags[param.FlagName]; exists {
-				if err := parseFieldValue(field, flagValue); err != nil {
-					return fmt.Errorf("can't parse flag value `%s` for %s: %w", flagValue, param.Path, err)
-				}
-			}
-		}
+
 		if idx+1 == ci.helpFlagParamNumber {
 			ci.helpFlagParamValue = field.Bool()
 		}
@@ -136,19 +156,40 @@ func (ci *ConfigInfo) Load(config any) error {
 		}
 	}
 
-	if ci.configNameParamValue != "" {
-		// Load config from file
-		// Читаем файл
-		data, err := os.ReadFile(ci.configNameParamValue)
-		if err != nil {
-			return fmt.Errorf("failed to read config file: %v", err)
-		}
-		if err = yaml.Unmarshal(data, config); err != nil {
-			return fmt.Errorf("failed to unmarshal config file: %v", err)
-		}
+	return nil
+}
+
+// TryLoadConfigFile - loads field values from config-file, if specified in ConfigInfo
+//   - config - a pointer to structure where the configuration is planned to be loaded
+func (ci *ConfigInfo) TryLoadConfigFile(config any) error {
+	if ci.configNameParamValue == "" {
+		return nil
+	}
+
+	// Load config from file
+	// Читаем файл
+	data, err := os.ReadFile(ci.configNameParamValue)
+	if err != nil {
+		return fmt.Errorf("failed to read config file: %v", err)
+	}
+	if err = yaml.Unmarshal(data, config); err != nil {
+		return fmt.Errorf("failed to unmarshal config file: %v", err)
 	}
 
 	return nil
+}
+
+// DefaultLoadOrder - default param-source order for loading in Load method
+var DefaultLoadOrder = []loadSource{LoadSourceDefaults, LoadSourceFlags, LoadSourceEnvs}
+
+// Load - loads field values from defaults, then from environment, when from flags, when from config, if specified
+//   - config - a pointer to structure where the configuration is planned to be loaded
+func (ci *ConfigInfo) Load(config any) error {
+	if err := ci.LoadInOrder(config, DefaultLoadOrder...); err != nil {
+		return err
+	}
+
+	return ci.TryLoadConfigFile(config)
 }
 
 // HasHelpFlag checks that the "help" flag is set
