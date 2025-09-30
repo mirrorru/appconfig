@@ -21,6 +21,11 @@ type ConfigInfo struct {
 	configNameParamValue   string
 }
 
+const (
+	EnvSeparator  = "_"
+	FlagSeparator = "-"
+)
+
 // NewConfigInfo creates new item on ConfigInfo and fills it with information of config parameters from `config`
 //   - config - any structure or a pointer to it where the configuration is planned to be loaded
 //   - envPrefix - a common prefix for environment variables from which configuration values can be taken
@@ -60,8 +65,8 @@ fieldsLoop:
 			subEnvPrefix := envPrefix
 			subFlagPrefix := flagPrefix
 			if !field.Anonymous {
-				subEnvPrefix = addPrefix(getTagOrName("env", &field), envPrefix, "_")
-				subFlagPrefix = addPrefix(getTagOrName("flag", &field), flagPrefix, "-")
+				subEnvPrefix = addPrefix(toSnakeCase(getTagOrName("env", &field)), envPrefix, EnvSeparator)
+				subFlagPrefix = addPrefix(toKebabCase(getTagOrName("flag", &field)), flagPrefix, FlagSeparator)
 			}
 			subPathPrefix := addPrefix(field.Name, pathPrefix, ".")
 			ci.processType(field.Type, subPathPrefix, subEnvPrefix, subFlagPrefix, append(indexes, field.Index...))
@@ -71,8 +76,8 @@ fieldsLoop:
 
 		pi := ParamInfo{
 			Path:     addPrefix(field.Name, pathPrefix, "."),
-			EnvName:  addPrefix(getTagOrName("env", &field), envPrefix, "_"),
-			FlagName: addPrefix(getTagOrName("flag", &field), flagPrefix, "-"),
+			EnvName:  addPrefix(toSnakeCase(getTagOrName("env", &field)), envPrefix, EnvSeparator),
+			FlagName: addPrefix(toKebabCase(getTagOrName("flag", &field)), flagPrefix, FlagSeparator),
 			HelpText: getTagOrName("help", &field),
 			Default:  field.Tag.Get("default"),
 			index:    append(indexes, field.Index...),

@@ -66,11 +66,12 @@ func TestAddPrefix(t *testing.T) {
 func TestGetTagOrName(t *testing.T) {
 	t.Parallel()
 	type testStruct struct {
-		Field1 string `test:"field1"`
-		Field2 string `test:"-"`
-		Field3 string `test:""`
-		Field4 string `test:"custom"`
-		Field5 string
+		Field1     string `test:"field1"`
+		Field2     string `test:"-"`
+		Field3     string `test:""`
+		Field4     string `test:"custom"`
+		Field5     string
+		CamelField string
 	}
 
 	fields := []reflect.StructField{}
@@ -117,9 +118,15 @@ func TestGetTagOrName(t *testing.T) {
 		},
 		{
 			name:     "non-existent tag",
-			tag:      "nonexistent",
+			tag:      "nonexisttaf",
 			field:    &fields[0],
 			expected: "Field1",
+		},
+		{
+			name:     "camel case",
+			tag:      "nonexisttag",
+			field:    &fields[5],
+			expected: "CamelField",
 		},
 	}
 
