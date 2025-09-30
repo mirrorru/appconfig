@@ -9,7 +9,7 @@ jobs:
   version-tag:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -17,12 +17,12 @@ jobs:
           repository: 'mirrorru/appconfig'
           token: ${{ secrets.ACTIONS }}
 
-      
+
       - name: Setup Git
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-      
+
       - name: Get latest tag
         id: get-tag
         run: |
@@ -40,11 +40,12 @@ jobs:
           NEW_PATCH=$((PATCH + 1))
           NEW_TAG="v${MAJOR}.${MINOR}.${NEW_PATCH}"
           echo "new_tag=${NEW_TAG}" >> $GITHUB_OUTPUT
-      
+
       - name: Create new tag
         run: |
           git tag ${{ steps.get-tag.outputs.new_tag }}
-          git tag -f latest
-          git push origin ${{ steps.get-tag.outputs.new_tag }} latest --force
+#          git tag -f latest
+#          git push origin ${{ steps.get-tag.outputs.new_tag }} latest --force
+          git push origin ${{ steps.get-tag.outputs.new_tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS }}

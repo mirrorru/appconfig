@@ -21,8 +21,8 @@ import (
 )
 
 type httpCfg struct {
-	Address string `default:":8080" help:"Address to listen HTTP requests"`
-	UseTLS  bool   `flag:"tls" help:"Use TLS (HTTPS)"`
+	Address string `default:":8080" flag:"addr" help:"Address to listen HTTP requests"`
+	UseTLS  bool   `help:"Use TLS (HTTPS)"`
 }
 
 type appCfg struct {
@@ -56,8 +56,8 @@ func main() {
     List or program parameters
     Environment param              command-line flag              default value   description
     APP_NAME                       --name                         My App          Name of application
-    APP_HTTP_ADDRESS               --http-address                 :8080           Address to listen HTTP requests
-    APP_HTTP_USETLS                --http-tls                                     Use TLS (HTTPS)
+    APP_HTTP_ADDRESS               --http-addr                    :8080           Address to listen HTTP requests
+    APP_HTTP_USE_TLS               --http-use-tls                                 Use TLS (HTTPS)
                                    --help                         false           show this help
                                    --example                      false           show config example
                                    --config                                       config file to load
@@ -73,7 +73,7 @@ func main() {
     ## >>>>> config file ends here <<<<<<
 
 #####  Load config from flags and environment
-    $ APP_NAME="Best APP" go run main.go --http-address=:8888 --http-tls
+    $ APP_NAME="Best APP" go run main.go --http-addr=:8888 --http-use-tls
     main.appCfg{Title:"Best APP", HTTP:main.httpCfg{Address:":8888", UseTLS:true}, ConfigBase:appconfig.ConfigBase{ShowHelp:false, PrintExample:false, ConfigFile:""}}
 
 

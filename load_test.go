@@ -10,7 +10,7 @@ import (
 
 func ExampleLoad() {
 	type httpServiceCfg struct {
-		Address string `default:":8080" help:"Address to listen HTTP requests"`
+		Address string `default:":8080" flag:"addr" help:"Address to listen HTTP requests"`
 		UseTLS  bool   `help:"Use TLS (HTTPS)"`
 	}
 
