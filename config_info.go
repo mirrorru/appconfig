@@ -29,7 +29,7 @@ const (
 // NewConfigInfo creates new item on ConfigInfo and fills it with information of config parameters from `config`
 //   - config - any structure or a pointer to it where the configuration is planned to be loaded
 //   - envPrefix - a common prefix for environment variables from which configuration values can be taken
-func NewConfigInfo(config any, envPrefix string) (result *ConfigInfo, err error) {
+func NewConfigInfo(config any, envPrefix string, opts ...Option) (result *ConfigInfo, err error) {
 	rv := reflect.ValueOf(config)
 	if rv.Kind() == reflect.Ptr {
 		rv = rv.Elem()
@@ -41,12 +41,12 @@ func NewConfigInfo(config any, envPrefix string) (result *ConfigInfo, err error)
 
 	result = new(ConfigInfo)
 	result.processType(rv.Type(), "", envPrefix, "", nil)
+	if opts == nil {
+		opts = defaultOpts
+	}
 	for idx := range result.params {
-		if result.params[idx].EnvName != "" {
-			result.params[idx].EnvName = strings.ToUpper(result.params[idx].EnvName)
-		}
-		if result.params[idx].FlagName != "" {
-			result.params[idx].FlagName = "--" + strings.ToLower(result.params[idx].FlagName)
+		for _, opt := range opts {
+			opt(&result.params[idx])
 		}
 	}
 
@@ -116,7 +116,7 @@ func (ci *ConfigInfo) LoadInOrder(config any, order ...loadSource) error {
 		return errors.New("value is not a pointer to struct")
 	}
 
-	var flags map[string]string
+	var flags map[string][]string
 	if slices.Contains(order, LoadSourceFlags) {
 		flags = parseFlags(os.Args[1:])
 	}
@@ -127,23 +127,23 @@ func (ci *ConfigInfo) LoadInOrder(config any, order ...loadSource) error {
 			switch source {
 			case LoadSourceDefaults:
 				if param.Default != "" {
-					if err := parseFieldValue(field, param.Default); err != nil {
+					if err := parseFieldValue(field, strings.Split(param.Default, "\n")); err != nil {
 						return fmt.Errorf("can't parse default value `%s` for %s: %w", param.Default, param.Path, err)
 					}
 				}
 			case LoadSourceEnvs:
 				if param.EnvName != "" {
-					if envValue, exists := os.LookupEnv(param.EnvName); exists && envValue != "" {
-						if err := parseFieldValue(field, envValue); err != nil {
-							return fmt.Errorf("can't parse env value `%s` for %s: %w", envValue, param.Path, err)
+					if envValues, exists := os.LookupEnv(param.EnvName); exists && envValues != "" {
+						if err := parseFieldValue(field, strings.Split(envValues, "\n")); err != nil {
+							return fmt.Errorf("can't parse env value `%s` for %s: %w", envValues, param.Path, err)
 						}
 					}
 				}
 			case LoadSourceFlags:
 				if param.FlagName != "" {
-					if flagValue, exists := flags[param.FlagName]; exists {
-						if err := parseFieldValue(field, flagValue); err != nil {
-							return fmt.Errorf("can't parse flag value `%s` for %s: %w", flagValue, param.Path, err)
+					if flagValues, exists := flags[param.FlagName]; exists {
+						if err := parseFieldValue(field, flagValues); err != nil {
+							return fmt.Errorf("can't parse flag value `%s` for %s: %w", flagValues, param.Path, err)
 						}
 					}
 				}

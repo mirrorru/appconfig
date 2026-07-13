@@ -4,6 +4,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -131,25 +132,27 @@ func TestParseFieldValue(t *testing.T) {
 	tests := []struct {
 		name     string
 		field    any
-		value    string
+		value    []string
 		expected any
 		wantErr  bool
 	}{
-		{"string", "initial", "test", "test", false},
-		{"bool_true", false, "true", true, false},
-		{"bool_false", true, "false", false, false},
-		{"bool_invalid", false, "invalid", false, true},
-		{"bool_empty", false, "", true, false},
-		{"int", int(0), "123", int(123), false},
-		{"int8", int8(0), "123", int8(123), false},
-		{"int_invalid", int(0), "abc", int(0), true},
-		{"uint", uint(0), "123", uint(123), false},
-		{"uint8", uint8(0), "123", uint8(123), false},
-		{"uint_invalid", uint(0), "abc", uint(0), true},
-		{"float32", float32(0), "123.45", float32(123.45), false},
-		{"float64", float64(0), "123.45", float64(123.45), false},
-		{"float_invalid", float64(0), "abc", float64(0), true},
-		{"unsupported_type", []string{}, "test", []string{}, true},
+		{"string", "initial", []string{"test"}, "test", false},
+		{"bool_true", false, []string{"true"}, true, false},
+		{"bool_false", true, []string{"false"}, false, false},
+		{"bool_invalid", false, []string{"invalid"}, false, true},
+		{"bool_empty", false, []string{""}, true, false},
+		{"int", int(0), []string{"123"}, int(123), false},
+		{"int8", int8(0), []string{"123"}, int8(123), false},
+		{"int_invalid", int(0), []string{"abc"}, int(0), true},
+		{"uint", uint(0), []string{"123"}, uint(123), false},
+		{"uint8", uint8(0), []string{"123"}, uint8(123), false},
+		{"uint_invalid", uint(0), []string{"abc"}, uint(0), true},
+		{"float32", float32(0), []string{"123.45"}, float32(123.45), false},
+		{"float64", float64(0), []string{"123.45"}, float64(123.45), false},
+		{"float_invalid", float64(0), []string{"abc"}, float64(0), true},
+		{"slice of strings", []string{}, []string{"test1", "test2"}, []string{"test1", "test2"}, false},
+		{"slice of ints", []int{}, []string{"123", "456", "789"}, []int{123, 456, 789}, false},
+		{"unsupported_type", time.Time{}, []string{"test"}, []string{}, true},
 	}
 
 	for _, tt := range tests {
@@ -178,32 +181,32 @@ func TestParseFlags(t *testing.T) {
 	tests := []struct {
 		name     string
 		args     []string
-		expected map[string]string
+		expected map[string][]string
 	}{
 		{
 			"no_args",
 			[]string{},
-			map[string]string{},
+			map[string][]string{},
 		},
 		{
 			"single_flag",
 			[]string{"--flag=value"},
-			map[string]string{"--flag": "value"},
+			map[string][]string{"--flag": {"value"}},
 		},
 		{
 			"multiple_flags",
 			[]string{"--flag1=value1", "--flag2=value2"},
-			map[string]string{"--flag1": "value1", "--flag2": "value2"},
+			map[string][]string{"--flag1": {"value1"}, "--flag2": {"value2"}},
 		},
 		{
 			"flag_without_value",
 			[]string{"--flag"},
-			map[string]string{"--flag": ""},
+			map[string][]string{"--flag": {""}},
 		},
 		{
 			"mixed_flags",
 			[]string{"--flag1=value", "--flag2"},
-			map[string]string{"--flag1": "value", "--flag2": ""},
+			map[string][]string{"--flag1": {"value"}, "--flag2": {""}},
 		},
 	}
 

@@ -6,39 +6,47 @@ import (
 	"strings"
 )
 
-func parseFieldValue(field reflect.Value, value string) error {
+func parseFieldValue(field reflect.Value, values []string) error {
 	switch field.Kind() {
 	case reflect.String:
-		field.SetString(value)
+		field.SetString(values[0])
 	case reflect.Bool:
-		if value == "" {
+		if values[0] == "" {
 			// in case then flag is "--enableSomething"
 			field.SetBool(true)
 			return nil
 		}
-		boolValue, err := parseBool(value)
+		boolValue, err := parseBool(values[0])
 		if err != nil {
 			return err
 		}
 		field.SetBool(boolValue)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		intValue, err := parseInt(value)
+		intValue, err := parseInt(values[0])
 		if err != nil {
 			return err
 		}
 		field.SetInt(intValue)
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		uintValue, err := parseUint(value)
+		uintValue, err := parseUint(values[0])
 		if err != nil {
 			return err
 		}
 		field.SetUint(uintValue)
 	case reflect.Float32, reflect.Float64:
-		floatValue, err := parseFloat(value)
+		floatValue, err := parseFloat(values[0])
 		if err != nil {
 			return err
 		}
 		field.SetFloat(floatValue)
+	case reflect.Slice:
+		slice := reflect.MakeSlice(field.Type(), len(values), len(values))
+		for i, v := range values {
+			if err := parseFieldValue(slice.Index(i), []string{v}); err != nil {
+				return fmt.Errorf("error parsing slice element at index %d: %w", i, err)
+			}
+		}
+		field.Set(slice)
 	default:
 		return fmt.Errorf("unsupported field type: %s", field.Kind())
 	}
@@ -74,8 +82,8 @@ func parseFloat(s string) (float64, error) {
 	return f, err
 }
 
-func parseFlags(args1toN []string) map[string]string {
-	result := map[string]string{}
+func parseFlags(args1toN []string) map[string][]string {
+	result := map[string][]string{}
 	for _, arg := range args1toN {
 		arr := strings.SplitN(arg, "=", 2)
 		key := arr[0]
@@ -83,7 +91,13 @@ func parseFlags(args1toN []string) map[string]string {
 		if len(arr) > 1 {
 			val = arr[1]
 		}
-		result[key] = val
+		vals, ok := result[key]
+		if !ok {
+			result[key] = []string{val}
+
+			continue
+		}
+		result[key] = append(vals, val)
 	}
 
 	return result

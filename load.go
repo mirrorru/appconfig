@@ -10,8 +10,8 @@ var (
 
 // Load - loads field values from defaults, then from environment, when from flags, when from config, if specified
 //   - config - a pointer to structure where the configuration is planned to be loaded
-func Load[T any, PT interface{ *T }](receiver PT, envPrefix string) (errResult error) {
-	ci, err := NewConfigInfo(receiver, envPrefix)
+func Load[T any, PT interface{ *T }](receiver PT, envPrefix string, opts ...Option) (errResult error) {
+	ci, err := NewConfigInfo(receiver, envPrefix, opts...)
 	if err != nil {
 		return err
 	}

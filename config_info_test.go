@@ -111,7 +111,7 @@ func TestNewConfigInfo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			ci, err := NewConfigInfo(tt.cfgReceiver, "TST")
+			ci, err := NewConfigInfo(tt.cfgReceiver, "TST", defaultOpts...)
 			if tt.wantErr {
 				require.Error(t, err)
 
