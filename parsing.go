@@ -40,6 +40,13 @@ func parseFieldValue(field reflect.Value, values []string) error {
 		}
 		field.SetFloat(floatValue)
 	case reflect.Slice:
+		slice := reflect.MakeSlice(field.Type(), len(values), len(values))
+		for i, v := range values {
+			if err := parseFieldValue(slice.Index(i), []string{v}); err != nil {
+				return fmt.Errorf("error parsing slice element at index %d: %w", i, err)
+			}
+		}
+		field.Set(slice)
 	default:
 		return fmt.Errorf("unsupported field type: %s", field.Kind())
 	}
