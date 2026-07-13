@@ -116,7 +116,7 @@ func (ci *ConfigInfo) LoadInOrder(config any, order ...loadSource) error {
 		return errors.New("value is not a pointer to struct")
 	}
 
-	var flags map[string]string
+	var flags map[string][]string
 	if slices.Contains(order, LoadSourceFlags) {
 		flags = parseFlags(os.Args[1:])
 	}
@@ -127,23 +127,23 @@ func (ci *ConfigInfo) LoadInOrder(config any, order ...loadSource) error {
 			switch source {
 			case LoadSourceDefaults:
 				if param.Default != "" {
-					if err := parseFieldValue(field, param.Default); err != nil {
+					if err := parseFieldValue(field, strings.Split(param.Default, "\n")); err != nil {
 						return fmt.Errorf("can't parse default value `%s` for %s: %w", param.Default, param.Path, err)
 					}
 				}
 			case LoadSourceEnvs:
 				if param.EnvName != "" {
-					if envValue, exists := os.LookupEnv(param.EnvName); exists && envValue != "" {
-						if err := parseFieldValue(field, envValue); err != nil {
-							return fmt.Errorf("can't parse env value `%s` for %s: %w", envValue, param.Path, err)
+					if envValues, exists := os.LookupEnv(param.EnvName); exists && envValues != "" {
+						if err := parseFieldValue(field, strings.Split(envValues, "\n")); err != nil {
+							return fmt.Errorf("can't parse env value `%s` for %s: %w", envValues, param.Path, err)
 						}
 					}
 				}
 			case LoadSourceFlags:
 				if param.FlagName != "" {
-					if flagValue, exists := flags[param.FlagName]; exists {
-						if err := parseFieldValue(field, flagValue); err != nil {
-							return fmt.Errorf("can't parse flag value `%s` for %s: %w", flagValue, param.Path, err)
+					if flagValues, exists := flags[param.FlagName]; exists {
+						if err := parseFieldValue(field, flagValues); err != nil {
+							return fmt.Errorf("can't parse flag value `%s` for %s: %w", flagValues, param.Path, err)
 						}
 					}
 				}
