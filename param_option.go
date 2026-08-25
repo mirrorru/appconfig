@@ -20,3 +20,7 @@ var OptFlagNameDoubleDash Option = func(pi *ParamInfo) {
 var OptFlagNameToLower Option = func(pi *ParamInfo) {
 	pi.FlagName = strings.ToLower(pi.FlagName)
 }
+
+var OptFlagNameSingleDash Option = func(pi *ParamInfo) {
+	pi.FlagName = "-" + pi.FlagName
+}
