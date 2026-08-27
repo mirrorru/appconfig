@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mirrorru/appconfig"
+	"github.com/delta-five/appconfig"
 )
 
 func ExampleLoad() {

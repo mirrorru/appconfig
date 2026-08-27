@@ -23,7 +23,7 @@ jobs:
       - name: Get latest tag
         id: get-tag
         run: |
-          # Получаем последний тег или используем v0.0.0 по умолчанию
+          # Получаем последний тег или используем v0.1.0 по умолчанию
           LAST_TAG=$(git describe --tags --abbrev=0 --match="v*.*.*" || echo "v0.1.0")
           echo "last_tag=${LAST_TAG}" >> $GITHUB_OUTPUT
           # ------------------------------

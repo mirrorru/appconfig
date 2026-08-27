@@ -1,4 +1,4 @@
-name: Go Unit Tests
+name: Go Tests
 
 on:
   pull_request:
@@ -13,23 +13,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Считываем строку 'go 1.XX' из go.mod и сохраняем версию в env.GO_VERSION
+      - name: Parse Go version from go.mod
+        run: |
+          VERSION=$(sed -En 's/^go (.*)$/\1/p' go.mod)
+          echo "GO_VERSION=${VERSION}" >> $GITHUB_ENV
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.24'
+          go-version: ${{ env.GO_VERSION }}
 
       - name: Cache Go modules
         uses: actions/cache@v3
         with:
-          path: |
-            ~/go/pkg/mod
-            ./.go-cache
+          path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - name: Run tests
-        run: |
-          go mod download
-          go test -v -coverprofile=coverage.out ./...
-          go tool cover -func=coverage.out
