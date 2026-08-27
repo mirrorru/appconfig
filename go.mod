@@ -1,4 +1,4 @@
-module github.com/mirrorru/appconfig
+module github.com/delta-five/appconfig
 
 go 1.27
 
