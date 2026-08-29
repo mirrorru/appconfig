@@ -1,3 +1,4 @@
+//nolint:lll
 package appconfig
 
 // ConfigBase can be used as embedded field in configuration structure with predefined parameters with autoprocessing:

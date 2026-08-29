@@ -21,7 +21,9 @@ func ExampleLoad() {
 	}
 
 	cfg := appConfig{}
-	err := appconfig.Load(&cfg, "APP")
+	err := appconfig.Load(&cfg, appconfig.Params{
+		EnvPrefix: "APP",
+	})
 
 	if errors.Is(err, appconfig.ErrStopExpected) {
 		os.Exit(-1)

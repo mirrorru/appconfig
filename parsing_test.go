@@ -1,7 +1,6 @@
 package appconfig
 
 import (
-	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -174,9 +173,6 @@ func TestParseFieldValue(t *testing.T) {
 
 func TestParseFlags(t *testing.T) {
 	t.Parallel()
-	// Сохраняем оригинальные аргументы и восстанавливаем их после теста
-	oldArgs := os.Args
-	defer func() { os.Args = oldArgs }()
 
 	tests := []struct {
 		name     string
@@ -197,6 +193,11 @@ func TestParseFlags(t *testing.T) {
 			"multiple_flags",
 			[]string{"--flag1=value1", "--flag2=value2"},
 			map[string][]string{"--flag1": {"value1"}, "--flag2": {"value2"}},
+		},
+		{
+			"repeated_flags",
+			[]string{"--flag1=value11", "--flag1=value12", "--flag2=value20"},
+			map[string][]string{"--flag1": {"value11", "value12"}, "--flag2": {"value20"}},
 		},
 		{
 			"flag_without_value",

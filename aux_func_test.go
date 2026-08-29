@@ -76,7 +76,7 @@ func TestGetTagOrName(t *testing.T) {
 
 	fields := []reflect.StructField{}
 	rt := reflect.TypeOf(testStruct{})
-	for i := 0; i < rt.NumField(); i++ {
+	for i := range rt.NumField() {
 		fields = append(fields, rt.Field(i))
 	}
 

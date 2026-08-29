@@ -1,3 +1,4 @@
+//nolint:gocognit
 package appconfig
 
 import (
@@ -19,6 +20,7 @@ type ConfigInfo struct {
 	exampleFlagParamValue  bool
 	configNameParamNumber  int
 	configNameParamValue   string
+	osArgs                 []string
 }
 
 const (
@@ -29,9 +31,9 @@ const (
 // NewConfigInfo creates new item on ConfigInfo and fills it with information of config parameters from `config`
 //   - config - any structure or a pointer to it where the configuration is planned to be loaded
 //   - envPrefix - a common prefix for environment variables from which configuration values can be taken
-func NewConfigInfo(config any, envPrefix string, opts ...Option) (result *ConfigInfo, err error) {
+func NewConfigInfo(config any, params Params) (result *ConfigInfo, err error) {
 	rv := reflect.ValueOf(config)
-	if rv.Kind() == reflect.Ptr {
+	if rv.Kind() == reflect.Pointer {
 		rv = rv.Elem()
 	}
 
@@ -39,14 +41,27 @@ func NewConfigInfo(config any, envPrefix string, opts ...Option) (result *Config
 		return nil, errors.New("value is not a struct or pointer to struct")
 	}
 
-	result = new(ConfigInfo)
-	result.processType(rv.Type(), "", envPrefix, "", nil)
-	if opts == nil {
-		opts = defaultOpts
+	osArgs := os.Args[1:]
+	if params.Args != nil {
+		osArgs = *params.Args
 	}
+	result = &ConfigInfo{
+		osArgs: osArgs,
+	}
+	result.processType(rv.Type(), "", "", "", nil)
+
 	for idx := range result.params {
-		for _, opt := range opts {
-			opt(&result.params[idx])
+		if envName := result.params[idx].EnvName; envName != "" {
+			if params.EnvPrefix != "" {
+				envName = params.EnvPrefix + EnvSeparator + envName
+			}
+			result.params[idx].EnvName = strings.ToUpper(envName)
+		}
+		if flagName := result.params[idx].FlagName; flagName != "" {
+			if params.FlagPrefix != "" {
+				flagName = params.FlagPrefix + flagName
+			}
+			result.params[idx].FlagName = strings.ToLower(flagName)
 		}
 	}
 
@@ -55,7 +70,7 @@ func NewConfigInfo(config any, envPrefix string, opts ...Option) (result *Config
 
 func (ci *ConfigInfo) processType(t reflect.Type, pathPrefix string, envPrefix string, flagPrefix string, indexes []int) {
 fieldsLoop:
-	for i := 0; i < t.NumField(); i++ {
+	for i := range t.NumField() {
 		field := t.Field(i)
 		if !field.IsExported() {
 			continue // Пропускаем неэкспортируемые поля
@@ -108,7 +123,7 @@ const (
 //   - config - a pointer to structure where the configuration is planned to be loaded
 func (ci *ConfigInfo) LoadInOrder(config any, order ...loadSource) error {
 	rv := reflect.ValueOf(config)
-	if rv.Kind() != reflect.Ptr {
+	if rv.Kind() != reflect.Pointer {
 		return errors.New("value is not a pointer to struct")
 	}
 	rv = rv.Elem()
@@ -118,7 +133,7 @@ func (ci *ConfigInfo) LoadInOrder(config any, order ...loadSource) error {
 
 	var flags map[string][]string
 	if slices.Contains(order, LoadSourceFlags) {
-		flags = parseFlags(os.Args[1:])
+		flags = parseFlags(ci.osArgs)
 	}
 
 	for idx, param := range ci.params {
@@ -175,10 +190,10 @@ func (ci *ConfigInfo) TryLoadConfigFile(config any) error {
 	// Читаем файл
 	data, err := os.ReadFile(ci.configNameParamValue)
 	if err != nil {
-		return fmt.Errorf("failed to read config file: %v", err)
+		return fmt.Errorf("failed to read config file: %w", err)
 	}
 	if err = yaml.Unmarshal(data, config); err != nil {
-		return fmt.Errorf("failed to unmarshal config file: %v", err)
+		return fmt.Errorf("failed to unmarshal config file: %w", err)
 	}
 
 	return nil
@@ -223,7 +238,7 @@ func (ci *ConfigInfo) ShowExample(config any) error {
 	// printing config file example
 	data, err := yaml.Marshal(config)
 	if err != nil {
-		return fmt.Errorf("failed to marshal config file for printing: %v", err)
+		return fmt.Errorf("failed to marshal config file for printing: %w", err)
 	}
 	fmt.Printf("Config file example:\n## >>>>> config file starts here >>>>>\n%s## >>>>> config file ends here <<<<<<\n", string(data))
 
