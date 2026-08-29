@@ -19,6 +19,7 @@ type ConfigInfo struct {
 	exampleFlagParamValue  bool
 	configNameParamNumber  int
 	configNameParamValue   string
+	osArgs                 []string
 }
 
 const (
@@ -39,15 +40,27 @@ func NewConfigInfo(config any, params Params) (result *ConfigInfo, err error) {
 		return nil, errors.New("value is not a struct or pointer to struct")
 	}
 
-	result = new(ConfigInfo)
+	osArgs := os.Args[1:]
+	if params.Args != nil {
+		osArgs = *params.Args
+	}
+	result = &ConfigInfo{
+		osArgs: osArgs,
+	}
 	result.processType(rv.Type(), "", "", "", nil)
 
 	for idx := range result.params {
-		if result.params[idx].EnvName != "" {
-			result.params[idx].EnvName = strings.ToUpper(params.EnvPrefix + EnvSeparator + result.params[idx].EnvName)
+		if envName := result.params[idx].EnvName; envName != "" {
+			if params.EnvPrefix != "" {
+				envName = params.EnvPrefix + EnvSeparator + envName
+			}
+			result.params[idx].EnvName = strings.ToUpper(envName)
 		}
-		if result.params[idx].FlagName != "" {
-			result.params[idx].FlagName = strings.ToLower(params.FlagPrefix + result.params[idx].FlagName)
+		if flagName := result.params[idx].FlagName; flagName != "" {
+			if params.FlagPrefix != "" {
+				flagName = params.FlagPrefix + flagName
+			}
+			result.params[idx].FlagName = strings.ToLower(flagName)
 		}
 	}
 
@@ -109,7 +122,7 @@ const (
 //   - config - a pointer to structure where the configuration is planned to be loaded
 func (ci *ConfigInfo) LoadInOrder(config any, order ...loadSource) error {
 	rv := reflect.ValueOf(config)
-	if rv.Kind() != reflect.Ptr {
+	if rv.Kind() != reflect.Pointer {
 		return errors.New("value is not a pointer to struct")
 	}
 	rv = rv.Elem()
@@ -119,7 +132,7 @@ func (ci *ConfigInfo) LoadInOrder(config any, order ...loadSource) error {
 
 	var flags map[string][]string
 	if slices.Contains(order, LoadSourceFlags) {
-		flags = parseFlags(os.Args[1:])
+		flags = parseFlags(ci.osArgs)
 	}
 
 	for idx, param := range ci.params {
@@ -176,10 +189,10 @@ func (ci *ConfigInfo) TryLoadConfigFile(config any) error {
 	// Читаем файл
 	data, err := os.ReadFile(ci.configNameParamValue)
 	if err != nil {
-		return fmt.Errorf("failed to read config file: %v", err)
+		return fmt.Errorf("failed to read config file: %w", err)
 	}
 	if err = yaml.Unmarshal(data, config); err != nil {
-		return fmt.Errorf("failed to unmarshal config file: %v", err)
+		return fmt.Errorf("failed to unmarshal config file: %w", err)
 	}
 
 	return nil
@@ -224,7 +237,7 @@ func (ci *ConfigInfo) ShowExample(config any) error {
 	// printing config file example
 	data, err := yaml.Marshal(config)
 	if err != nil {
-		return fmt.Errorf("failed to marshal config file for printing: %v", err)
+		return fmt.Errorf("failed to marshal config file for printing: %w", err)
 	}
 	fmt.Printf("Config file example:\n## >>>>> config file starts here >>>>>\n%s## >>>>> config file ends here <<<<<<\n", string(data))
 

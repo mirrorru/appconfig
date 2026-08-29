@@ -44,6 +44,7 @@ func MustLoad[T any, PT interface{ *T }](receiver PT, params Params) {
 
 // Params - параметры для загрузки данных о полях конфигурации
 type Params struct {
-	EnvPrefix  string // Префикс имени переменных окружения, например MY_APP
-	FlagPrefix string // Префикс ключей (флагов) командной строки, например "--", "-" или ""
+	EnvPrefix  string    // Префикс имени переменных окружения, например MY_APP
+	FlagPrefix string    // Префикс ключей (флагов) командной строки, например "--", "-" или ""
+	Args       *[]string // Строка с ключами командной строки, при nil будет использован os.Args
 }

@@ -10,7 +10,7 @@ import (
 
 func TestNewConfigInfo(t *testing.T) {
 	t.Parallel()
-	const PFX = "TST"
+	const Pfx = "TST"
 	type ForInclude struct {
 		Help    bool   `env:"e1" flag:"f1" help:"h1" default:"d1" use_as_show_help_flag:"yes"`
 		Example bool   `env:"e1" flag:"f1" help:"h1" default:"d1" use_as_example_printing_flag:"true"`
@@ -43,8 +43,8 @@ func TestNewConfigInfo(t *testing.T) {
 			expectedCI: &ConfigInfo{
 				helpFlagParamNumber: 2,
 				params: ParamList{
-					{Path: "Param", EnvName: PFX + "_P", FlagName: "--f", HelpText: "h", Default: "d", index: []int{0}},
-					{Path: "Help", EnvName: PFX + "_E1", FlagName: "--f1", HelpText: "h1", Default: "d1", index: []int{1}},
+					{Path: "Param", EnvName: Pfx + "_P", FlagName: "--f", HelpText: "h", Default: "d", index: []int{0}},
+					{Path: "Help", EnvName: Pfx + "_E1", FlagName: "--f1", HelpText: "h1", Default: "d1", index: []int{1}},
 				},
 			},
 		},
@@ -58,8 +58,8 @@ func TestNewConfigInfo(t *testing.T) {
 			expectedCI: &ConfigInfo{
 				exampleFlagParamNumber: 2,
 				params: ParamList{
-					{Path: "Param", EnvName: PFX + "_P", FlagName: "--f", HelpText: "h", Default: "d", index: []int{0}},
-					{Path: "Example", EnvName: PFX + "_E1", FlagName: "--f1", HelpText: "h1", Default: "d1", index: []int{1}},
+					{Path: "Param", EnvName: Pfx + "_P", FlagName: "--f", HelpText: "h", Default: "d", index: []int{0}},
+					{Path: "Example", EnvName: Pfx + "_E1", FlagName: "--f1", HelpText: "h1", Default: "d1", index: []int{1}},
 				},
 			},
 		},
@@ -73,8 +73,8 @@ func TestNewConfigInfo(t *testing.T) {
 			expectedCI: &ConfigInfo{
 				configNameParamNumber: 2,
 				params: ParamList{
-					{Path: "Param", EnvName: PFX + "_P", FlagName: "--f", HelpText: "h", Default: "d", index: []int{0}},
-					{Path: "Config", EnvName: PFX + "_E1", FlagName: "--f1", HelpText: "h1", Default: "d1", index: []int{1}},
+					{Path: "Param", EnvName: Pfx + "_P", FlagName: "--f", HelpText: "h", Default: "d", index: []int{0}},
+					{Path: "Config", EnvName: Pfx + "_E1", FlagName: "--f1", HelpText: "h1", Default: "d1", index: []int{1}},
 				},
 			},
 		},
@@ -97,13 +97,13 @@ func TestNewConfigInfo(t *testing.T) {
 				exampleFlagParamNumber: 2,
 				configNameParamNumber:  3,
 				params: ParamList{
-					{Path: "ForInclude.Help", EnvName: PFX + "_E1", FlagName: "--f1", HelpText: "h1", Default: "d1", index: []int{0, 0}},
-					{Path: "ForInclude.Example", EnvName: PFX + "_E1", FlagName: "--f1", HelpText: "h1", Default: "d1", index: []int{0, 1}},
-					{Path: "ForInclude.Config", EnvName: PFX + "_E1", FlagName: "--f1", HelpText: "h1", Default: "d1", index: []int{0, 2}},
-					{Path: "Sub.Fld.Param", EnvName: PFX + "_SE_FLD_P", FlagName: "--sf-fld-f", HelpText: "h", Default: "d", index: []int{1, 0, 0}},
-					{Path: "Sub.Bool", EnvName: PFX + "_SE_P1", FlagName: "--sf-f1", HelpText: "h1", Default: "d1", index: []int{1, 1}},
-					{Path: "Sub.Str", EnvName: PFX + "_SE_P2", FlagName: "--sf-f2", HelpText: "h2", Default: "d2", index: []int{1, 2}},
-					{Path: "Sub.Float", EnvName: PFX + "_SE_P3", FlagName: "--sf-f3", HelpText: "h3", Default: "d3", index: []int{1, 3}},
+					{Path: "ForInclude.Help", EnvName: Pfx + "_E1", FlagName: "--f1", HelpText: "h1", Default: "d1", index: []int{0, 0}},
+					{Path: "ForInclude.Example", EnvName: Pfx + "_E1", FlagName: "--f1", HelpText: "h1", Default: "d1", index: []int{0, 1}},
+					{Path: "ForInclude.Config", EnvName: Pfx + "_E1", FlagName: "--f1", HelpText: "h1", Default: "d1", index: []int{0, 2}},
+					{Path: "Sub.Fld.Param", EnvName: Pfx + "_SE_FLD_P", FlagName: "--sf-fld-f", HelpText: "h", Default: "d", index: []int{1, 0, 0}},
+					{Path: "Sub.Bool", EnvName: Pfx + "_SE_P1", FlagName: "--sf-f1", HelpText: "h1", Default: "d1", index: []int{1, 1}},
+					{Path: "Sub.Str", EnvName: Pfx + "_SE_P2", FlagName: "--sf-f2", HelpText: "h2", Default: "d2", index: []int{1, 2}},
+					{Path: "Sub.Float", EnvName: Pfx + "_SE_P3", FlagName: "--sf-f3", HelpText: "h3", Default: "d3", index: []int{1, 3}},
 				},
 			},
 		},
@@ -121,6 +121,8 @@ func TestNewConfigInfo(t *testing.T) {
 				return
 			}
 
+			tt.expectedCI.osArgs = os.Args[1:]
+
 			require.NoError(t, err)
 			require.Equal(t, tt.expectedCI, ci)
 		})
@@ -134,21 +136,19 @@ func TestConfigInfo_Load(t *testing.T) {
 	}
 	type TestCfg struct {
 		ConfigBase
-		Name    string `env:"path"`
+		Name    string `env:"PATH"`
 		Slice   []int
 		Map     map[string]string
 		Value   int
 		Flag    bool
 		Include SubCfg
 	}
-	osArgsSrc := os.Args
-	defer func() { os.Args = osArgsSrc }()
 
 	m := sync.Mutex{}
 
 	tests := []struct {
 		name        string
-		setup       func()
+		args        *[]string
 		sourceCfg   any
 		expectedCfg TestCfg
 		ci          *ConfigInfo
@@ -166,24 +166,18 @@ func TestConfigInfo_Load(t *testing.T) {
 			wantErr:   true,
 		},
 		{
-			name: "invalid cfg file data",
-			setup: func() {
-				os.Args = append(osArgsSrc, "--config=test_cfg.invalid")
-			},
+			name:    "invalid cfg file data",
+			args:    &[]string{"--config=test_cfg.invalid"},
 			wantErr: true,
 		},
 		{
-			name: "invalid cfg file name",
-			setup: func() {
-				os.Args = append(osArgsSrc, "--config=test_cfg.not_exist")
-			},
+			name:    "invalid cfg file name",
+			args:    &[]string{"--config=test_cfg.not_exist"},
 			wantErr: true,
 		},
 		{
 			name: "valid cfg file",
-			setup: func() {
-				os.Args = append(osArgsSrc, "--config=test_cfg.valid")
-			},
+			args: &[]string{"--config=test_cfg.valid"},
 			expectedCfg: TestCfg{
 				ConfigBase: ConfigBase{
 					ConfigFile: "test_cfg.valid",
@@ -200,9 +194,7 @@ func TestConfigInfo_Load(t *testing.T) {
 		},
 		{
 			name: "help flag + name",
-			setup: func() {
-				os.Args = append(osArgsSrc, "--help")
-			},
+			args: &[]string{"--help"},
 			expectedCfg: TestCfg{
 				ConfigBase: ConfigBase{
 					ShowHelp: true,
@@ -212,9 +204,7 @@ func TestConfigInfo_Load(t *testing.T) {
 		},
 		{
 			name: "example flag",
-			setup: func() {
-				os.Args = append(osArgsSrc, "--example", "--value=99")
-			},
+			args: &[]string{"--example", "--value=99"},
 			expectedCfg: TestCfg{
 				ConfigBase: ConfigBase{
 					PrintExample: true,
@@ -225,18 +215,14 @@ func TestConfigInfo_Load(t *testing.T) {
 		},
 		{
 			name: "path to name",
-			setup: func() {
-				os.Args = osArgsSrc
-			},
+			args: &[]string{},
 			expectedCfg: TestCfg{
 				Name: os.Getenv("PATH"),
 			},
 		},
 		{
 			name: "bad default",
-			setup: func() {
-				os.Args = osArgsSrc
-			},
+			args: &[]string{},
 			sourceCfg: &struct {
 				Value int `default:"string"`
 			}{},
@@ -244,9 +230,7 @@ func TestConfigInfo_Load(t *testing.T) {
 		},
 		{
 			name: "bad flag value",
-			setup: func() {
-				os.Args = append(osArgsSrc, "--value=string")
-			},
+			args: &[]string{"--value=string"},
 			sourceCfg: &struct {
 				Value int
 			}{},
@@ -270,13 +254,9 @@ func TestConfigInfo_Load(t *testing.T) {
 				cfg = &TestCfg{}
 			}
 
-			ci, err := NewConfigInfo(cfg, Params{FlagPrefix: "--"})
+			ci, err := NewConfigInfo(cfg, Params{FlagPrefix: "--", Args: tt.args})
 			if tt.ci == nil {
 				require.NoError(t, err)
-			}
-
-			if tt.setup != nil {
-				tt.setup()
 			}
 
 			err = ci.Load(cfg)
