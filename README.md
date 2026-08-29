@@ -26,14 +26,15 @@ type httpCfg struct {
 }
 
 type appCfg struct {
-	Title                string `default:"My App" env:"name" flag:"name" help:"Name of application"`
-	HTTP                 httpCfg
 	appconfig.ConfigBase `yaml:"-"` // Including fields with "magic" tags, if you need to process --help, --example or --config=file_name
+	HTTP                 httpCfg
+	Title                string `default:"My App" env:"name" flag:"name" help:"Name of application"`
+	MagicNums            []int  `flag:"num" help:"Seed numbers"`
 }
 
 func main() {
 	cfg := appCfg{}
-	err := appconfig.Load(&cfg, "APP")
+	err := appconfig.Load(&cfg, appconfig.Params{EnvPrefix: "APP", FlagPrefix: "--"})
 
 	if err != nil {
 		if errors.Is(err, appconfig.ErrStopExpected) {
@@ -44,36 +45,36 @@ func main() {
 
 	fmt.Printf("%#v\n", cfg)
 }
-
 ```
 
 #####  Just run      
     $ go run main.go
-    main.appCfg{Title:"My App", HTTP:main.httpCfg{Address:":8080", UseTLS:false}, ConfigBase:appconfig.ConfigBase{ShowHelp:false, PrintExample:false, ConfigFile:""}}
+    main.appCfg{ConfigBase:appconfig.ConfigBase{ShowHelp:false, PrintExample:false, ConfigFile:""}, HTTP:main.httpCfg{Address:":8080", UseTLS:false}, Title:"My App", MagicNums:[]int(nil)}
 
 #####  Showing help
     $ go run main.go --help
     List or program parameters
     Environment param              command-line flag              default value   description
-    APP_NAME                       --name                         My App          Name of application
+    --help                         false           show this help
+    --example                      false           show config example
+    --config                                       config file to load
     APP_HTTP_ADDRESS               --http-addr                    :8080           Address to listen HTTP requests
     APP_HTTP_USE_TLS               --http-use-tls                                 Use TLS (HTTPS)
-                                   --help                         false           show this help
-                                   --example                      false           show config example
-                                   --config                                       config file to load
+    APP_NAME                       --name                         My App          Name of application
+    APP_MAGIC_NUMS                 --num                                          Seed numbers
 
 #####  Showing config file example
     $ go run main.go --example
-    Config file example:
     ## >>>>> config file starts here >>>>>
-    title: My App
     http:
         address: :8080
         usetls: false
-    ## >>>>> config file ends here <<<<<<
+    title: My App
+    magicnums: []
+## >>>>> config file ends here <<<<<<
 
 #####  Load config from flags and environment
-    $ APP_NAME="Best APP" go run main.go --http-addr=:8888 --http-use-tls
-    main.appCfg{Title:"Best APP", HTTP:main.httpCfg{Address:":8888", UseTLS:true}, ConfigBase:appconfig.ConfigBase{ShowHelp:false, PrintExample:false, ConfigFile:""}}
+    $ APP_NAME="Best APP" go run main.go --http-addr=:8888 --http-use-tls --num=31 --num=61
+    main.appCfg{ConfigBase:appconfig.ConfigBase{ShowHelp:false, PrintExample:false, ConfigFile:""}, HTTP:main.httpCfg{Address:":8888", UseTLS:true}, Title:"Best APP", MagicNums:[]int{31, 61}}
 
 

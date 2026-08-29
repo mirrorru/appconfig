@@ -199,6 +199,11 @@ func TestParseFlags(t *testing.T) {
 			map[string][]string{"--flag1": {"value1"}, "--flag2": {"value2"}},
 		},
 		{
+			"repeated_flags",
+			[]string{"--flag1=value11", "--flag1=value12", "--flag2=value20"},
+			map[string][]string{"--flag1": {"value11", "value12"}, "--flag2": {"value20"}},
+		},
+		{
 			"flag_without_value",
 			[]string{"--flag"},
 			map[string][]string{"--flag": {""}},

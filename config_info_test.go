@@ -111,7 +111,10 @@ func TestNewConfigInfo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			ci, err := NewConfigInfo(tt.cfgReceiver, "TST", defaultOpts...)
+			ci, err := NewConfigInfo(tt.cfgReceiver, Params{
+				EnvPrefix:  "TST",
+				FlagPrefix: "--",
+			})
 			if tt.wantErr {
 				require.Error(t, err)
 
@@ -267,7 +270,7 @@ func TestConfigInfo_Load(t *testing.T) {
 				cfg = &TestCfg{}
 			}
 
-			ci, err := NewConfigInfo(cfg, "")
+			ci, err := NewConfigInfo(cfg, Params{FlagPrefix: "--"})
 			if tt.ci == nil {
 				require.NoError(t, err)
 			}

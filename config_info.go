@@ -29,7 +29,7 @@ const (
 // NewConfigInfo creates new item on ConfigInfo and fills it with information of config parameters from `config`
 //   - config - any structure or a pointer to it where the configuration is planned to be loaded
 //   - envPrefix - a common prefix for environment variables from which configuration values can be taken
-func NewConfigInfo(config any, envPrefix string, opts ...Option) (result *ConfigInfo, err error) {
+func NewConfigInfo(config any, params Params) (result *ConfigInfo, err error) {
 	rv := reflect.ValueOf(config)
 	if rv.Kind() == reflect.Ptr {
 		rv = rv.Elem()
@@ -40,13 +40,14 @@ func NewConfigInfo(config any, envPrefix string, opts ...Option) (result *Config
 	}
 
 	result = new(ConfigInfo)
-	result.processType(rv.Type(), "", envPrefix, "", nil)
-	if opts == nil {
-		opts = defaultOpts
-	}
+	result.processType(rv.Type(), "", "", "", nil)
+
 	for idx := range result.params {
-		for _, opt := range opts {
-			opt(&result.params[idx])
+		if result.params[idx].EnvName != "" {
+			result.params[idx].EnvName = strings.ToUpper(params.EnvPrefix + EnvSeparator + result.params[idx].EnvName)
+		}
+		if result.params[idx].FlagName != "" {
+			result.params[idx].FlagName = strings.ToLower(params.FlagPrefix + result.params[idx].FlagName)
 		}
 	}
 
