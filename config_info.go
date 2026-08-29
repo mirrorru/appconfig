@@ -1,3 +1,4 @@
+//nolint:gocognit
 package appconfig
 
 import (
@@ -32,7 +33,7 @@ const (
 //   - envPrefix - a common prefix for environment variables from which configuration values can be taken
 func NewConfigInfo(config any, params Params) (result *ConfigInfo, err error) {
 	rv := reflect.ValueOf(config)
-	if rv.Kind() == reflect.Ptr {
+	if rv.Kind() == reflect.Pointer {
 		rv = rv.Elem()
 	}
 
@@ -69,7 +70,7 @@ func NewConfigInfo(config any, params Params) (result *ConfigInfo, err error) {
 
 func (ci *ConfigInfo) processType(t reflect.Type, pathPrefix string, envPrefix string, flagPrefix string, indexes []int) {
 fieldsLoop:
-	for i := 0; i < t.NumField(); i++ {
+	for i := range t.NumField() {
 		field := t.Field(i)
 		if !field.IsExported() {
 			continue // Пропускаем неэкспортируемые поля
